@@ -7,7 +7,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+console.log("========== ENV TEST ==========");
+console.log("GROQ_API_KEY:", process.env.GROQ_API_KEY ? "FOUND" : "NOT FOUND");
+console.log("PORT:", process.env.PORT);
+console.log("==============================");
 const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: "https://api.groq.com/openai/v1",
