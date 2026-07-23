@@ -255,6 +255,9 @@ app.post("/reviews", async (req, res) => {
 
 app.get("/reviews/:placeId", async (req, res) => {
 
+  console.log("========== REVIEW TEST ==========");
+  console.log(req.body);
+  console.log("=================================");
   try {
 
 
