@@ -1,16 +1,30 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const OpenAI = require("openai");
+
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+
+const serviceAccount = require("./serviceAccountKey.json");
+
+initializeApp({
+  credential: cert(serviceAccount),
+});
+
+const db = getFirestore();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
 console.log("========== ENV TEST ==========");
 console.log("GROQ_API_KEY:", process.env.GROQ_API_KEY ? "FOUND" : "NOT FOUND");
 console.log("PORT:", process.env.PORT);
 console.log("==============================");
+
 const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: "https://api.groq.com/openai/v1",
@@ -37,18 +51,19 @@ const SYSTEM_PROMPT = `
 - الطبخ
 - أي موضوع عام
 
-فلا تجب عنه.
-
 بدلاً من ذلك قل:
 
-"أنا Kemara، مرشد سياحي متخصص في السياحة والآثار المصرية فقط. يمكنني مساعدتك في المعابد، الأهرامات، المتاحف، الشخصيات التاريخية، أو أي سؤال يخص السياحة في مصر."
+"أنا Kemara، مرشد سياحي متخصص في السياحة والآثار المصرية فقط."
 
 ### أسلوب الرد:
 - مختصر.
 - دقيق.
 - لا تخترع معلومات.
-- إذا لم تكن متأكدًا، قل: "لا أملك معلومة مؤكدة عن ذلك."
 `;
+
+//////////////////////////////////////////////////////
+// Home
+//////////////////////////////////////////////////////
 
 app.get("/", (req, res) => {
   res.json({
@@ -56,6 +71,10 @@ app.get("/", (req, res) => {
     message: "Karmma Backend Running",
   });
 });
+
+//////////////////////////////////////////////////////
+// Chat
+//////////////////////////////////////////////////////
 
 app.post("/chat", async (req, res) => {
   try {
@@ -66,10 +85,7 @@ app.post("/chat", async (req, res) => {
         role: "system",
         content: SYSTEM_PROMPT,
       },
-      ...(history || []).map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      ...(history || []),
       {
         role: "user",
         content: message,
@@ -86,7 +102,6 @@ app.post("/chat", async (req, res) => {
     res.json({
       reply: completion.choices[0].message.content,
     });
-
   } catch (e) {
     console.error(e);
 
@@ -95,6 +110,80 @@ app.post("/chat", async (req, res) => {
     });
   }
 });
+
+//////////////////////////////////////////////////////
+// Submit Review
+//////////////////////////////////////////////////////
+
+app.post("/reviews", async (req, res) => {
+  try {
+    const {
+      placeId,
+      userId,
+      overallRating,
+      aiRating,
+      comment,
+    } = req.body;
+
+    await db.collection("reviews").add({
+      placeId,
+      userId,
+      overallRating,
+      aiRating,
+      comment,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    res.json({
+      success: true,
+      message: "Review submitted successfully",
+    });
+
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      success: false,
+      error: e.message,
+    });
+  }
+});
+
+//////////////////////////////////////////////////////
+// Get Reviews
+//////////////////////////////////////////////////////
+
+app.get("/reviews/:placeId", async (req, res) => {
+  try {
+    const snapshot = await db
+      .collection("reviews")
+      .where("placeId", "==", req.params.placeId)
+      .get();
+
+    const reviews = [];
+
+    snapshot.forEach((doc) => {
+      reviews.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    res.json(reviews);
+
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      success: false,
+      error: e.message,
+    });
+  }
+});
+
+//////////////////////////////////////////////////////
+// Server
+//////////////////////////////////////////////////////
 
 const PORT = process.env.PORT || 3000;
 
