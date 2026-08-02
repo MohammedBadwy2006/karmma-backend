@@ -30,6 +30,8 @@ const transporter = nodemailer.createTransport({
 
   secure: true,
 
+  family: 4,
+
   connectionTimeout: 10000,
 
   greetingTimeout: 10000,
