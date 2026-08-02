@@ -22,28 +22,46 @@ console.log(
 async function sendViaGmail({ to, subject, html }) {
 
   console.log("=== GMAIL START ===");
-const transporter = nodemailer.createTransport({
 
-  host: "smtp.gmail.com",
 
-  port: 465,
+  const transporter = nodemailer.createTransport({
 
-  secure: true,
+    host: "smtp.gmail.com",
 
-  family: 4,
+    port: 465,
 
-  connectionTimeout: 10000,
+    secure: true,
 
-  greetingTimeout: 10000,
 
-  socketTimeout: 10000,
+    lookup: (hostname, options, callback) => {
 
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
+      require("dns").lookup(
+        hostname,
+        {
+          family: 4
+        },
+        callback
+      );
 
-});
+    },
+
+
+    connectionTimeout: 10000,
+
+    greetingTimeout: 10000,
+
+    socketTimeout: 10000,
+
+
+    auth: {
+
+      user: process.env.GMAIL_USER,
+
+      pass: process.env.GMAIL_PASS,
+
+    },
+
+  });
 
 
 
@@ -58,7 +76,6 @@ const transporter = nodemailer.createTransport({
     html,
 
   });
-
 
 
   console.log("=== GMAIL SUCCESS ===");
