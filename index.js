@@ -1081,7 +1081,7 @@ FieldValue.serverTimestamp()
 
 
 
-
+console.log("BEFORE SEND MAIL");
 
 
 await sendMail({
@@ -1115,7 +1115,7 @@ Expires in ${CODE_TTL_MINUTES} minutes
 });
 
 
-
+console.log("AFTER SEND MAIL");
 
 
 res.json({
