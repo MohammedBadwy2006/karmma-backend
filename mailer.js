@@ -4,11 +4,8 @@ const nodemailer = require("nodemailer");
 
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || "gmail";
 
-//////////////////////////////////////////////////////
-// Gmail
-//////////////////////////////////////////////////////
-
 async function sendViaGmail({ to, subject, html }) {
+
   console.log("=== GMAIL START ===");
 
   const transporter = nodemailer.createTransport({
@@ -21,6 +18,7 @@ async function sendViaGmail({ to, subject, html }) {
     },
   });
 
+
   await transporter.sendMail({
     from: `"Kemara" <${process.env.GMAIL_USER}>`,
     to,
@@ -28,26 +26,26 @@ async function sendViaGmail({ to, subject, html }) {
     html,
   });
 
+
   console.log("=== GMAIL SUCCESS ===");
 }
 
-//////////////////////////////////////////////////////
-// Resend
-//////////////////////////////////////////////////////
+
 
 async function sendViaResend({ to, subject, html }) {
+
   console.log("=== RESEND START ===");
 
   console.log("TO:", to);
 
   console.log(
-    "RESEND_API_KEY:",
+    "RESEND KEY:",
     process.env.RESEND_API_KEY ? "FOUND" : "MISSING"
   );
 
   console.log(
-    "RESEND_FROM:",
-    process.env.RESEND_FROM || "MISSING"
+    "FROM:",
+    process.env.RESEND_FROM
   );
 
 
@@ -58,71 +56,78 @@ async function sendViaResend({ to, subject, html }) {
   );
 
 
-  console.log("BEFORE RESEND REQUEST");
+  const result = await resend.emails.send({
+
+    from: process.env.RESEND_FROM,
+
+    to,
+
+    subject,
+
+    html,
+
+  });
 
 
-  const { data, error } =
-    await resend.emails.send({
-      from: process.env.RESEND_FROM,
-      to,
-      subject,
-      html,
-    });
+  console.log(result);
 
 
-  console.log("AFTER RESEND REQUEST");
+  if(result.error){
 
-  console.log("DATA:", data);
-  console.log("ERROR:", error);
+    throw new Error(
+      result.error.message
+    );
 
-
-  if (error) {
-    throw new Error(error.message);
   }
 
 
   console.log("=== RESEND SUCCESS ===");
+
 }
 
 
-//////////////////////////////////////////////////////
-// SendGrid
-//////////////////////////////////////////////////////
 
-async function sendViaSendGrid({ to, subject, html }) {
-  console.log("=== SENDGRID START ===");
+
+async function sendViaSendGrid({to,subject,html}){
 
   const sgMail = require("@sendgrid/mail");
+
 
   sgMail.setApiKey(
     process.env.SENDGRID_API_KEY
   );
 
+
   await sgMail.send({
+
     to,
+
     from: process.env.SENDGRID_FROM,
+
     subject,
-    html,
+
+    html
+
   });
 
-  console.log("=== SENDGRID SUCCESS ===");
+
 }
 
 
-//////////////////////////////////////////////////////
-// Provider
-//////////////////////////////////////////////////////
 
-const providers = {
-  gmail: sendViaGmail,
-  resend: sendViaResend,
-  sendgrid: sendViaSendGrid,
+const providers={
+
+  gmail:sendViaGmail,
+
+  resend:sendViaResend,
+
+  sendgrid:sendViaSendGrid
+
 };
 
 
-async function sendMail(options) {
 
-  console.log("===== SEND MAIL CALLED =====");
+async function sendMail(options){
 
   console.log(
     "EMAIL PROVIDER:",
@@ -134,17 +139,21 @@ async function sendMail(options) {
     providers[EMAIL_PROVIDER];
 
 
-  if (!provider) {
+  if(!provider){
+
     throw new Error(
-      `Unknown EMAIL_PROVIDER: ${EMAIL_PROVIDER}`
+      "Unknown email provider"
     );
+
   }
 
 
   return provider(options);
+
 }
 
 
-module.exports = {
-  sendMail,
+
+module.exports={
+  sendMail
 };
