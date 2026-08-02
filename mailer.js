@@ -61,6 +61,11 @@ async function sendViaGmail({ to, subject, html }) {
     socketTimeout: 10000,
 
   });
+  console.log("MAIL OPTIONS:", {
+  from: process.env.GMAIL_USER,
+  to,
+  subject,
+});
 
   await transporter.sendMail({
 

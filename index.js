@@ -583,12 +583,20 @@ console.log(req.body);
 
 
 try{
+console.log("######## NEW BUILD ########");
+console.log("TIME:", new Date().toISOString());
+console.log("REQUEST BODY:", req.body);
 
+
+
+console.log("EMAIL:", email);
 
 let {
   email
 }=req.body || {};
 
+
+console.log("EMAIL:", email);
 
 
 if(!email){
