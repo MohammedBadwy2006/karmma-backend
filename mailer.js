@@ -23,6 +23,7 @@ async function sendViaGmail({ to, subject, html }) {
 
   console.log("=== GMAIL START ===");
 
+  const dns = require("dns");
 
   const transporter = nodemailer.createTransport({
 
@@ -32,38 +33,34 @@ async function sendViaGmail({ to, subject, html }) {
 
     secure: true,
 
+    lookup(hostname, options, callback) {
 
-    lookup: (hostname, options, callback) => {
+      console.log("LOOKUP:", hostname);
 
-      require("dns").lookup(
+      dns.lookup(
         hostname,
-        {
-          family: 4
-        },
-        callback
+        { family: 4, all: false },
+        (err, address, family) => {
+
+          console.log("DNS RESULT:", err, address, family);
+
+          callback(err, address, family);
+
+        }
       );
 
     },
 
-
-    connectionTimeout: 10000,
-
-    greetingTimeout: 10000,
-
-    socketTimeout: 10000,
-
-
     auth: {
-
       user: process.env.GMAIL_USER,
-
       pass: process.env.GMAIL_PASS,
-
     },
 
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+
   });
-
-
 
   await transporter.sendMail({
 
@@ -76,7 +73,6 @@ async function sendViaGmail({ to, subject, html }) {
     html,
 
   });
-
 
   console.log("=== GMAIL SUCCESS ===");
 
