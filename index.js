@@ -936,7 +936,7 @@ FieldValue.serverTimestamp()
 
 console.log("BEFORE SEND MAIL");
 
-
+console.log("SENDING TO:", email);
 await sendMail({
 
 to:email,

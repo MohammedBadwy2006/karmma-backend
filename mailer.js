@@ -6,6 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendMail({ to, subject, html }) {
   console.log("=== RESEND START ===");
+  console.log("TO:", to);
 
   const result = await resend.emails.send({
     from: "Kemara <onboarding@resend.dev>",
@@ -14,7 +15,8 @@ async function sendMail({ to, subject, html }) {
     html,
   });
 
-  console.log(result);
+  console.log("RESEND RESULT:");
+  console.dir(result, { depth: null });
 
   console.log("=== RESEND SUCCESS ===");
 }
