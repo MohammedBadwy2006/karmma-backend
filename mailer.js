@@ -22,34 +22,26 @@ console.log(
 async function sendViaGmail({ to, subject, html }) {
 
   console.log("=== GMAIL START ===");
+const transporter = nodemailer.createTransport({
 
+  host: "smtp.gmail.com",
 
-  const transporter = nodemailer.createTransport({
+  port: 465,
 
-    host: "smtp.gmail.com",
+  secure: true,
 
-    port: 587,
+  connectionTimeout: 10000,
 
-    secure: false,
+  greetingTimeout: 10000,
 
+  socketTimeout: 10000,
 
-    connectionTimeout: 10000,
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
 
-    greetingTimeout: 10000,
-
-    socketTimeout: 10000,
-
-
-    auth: {
-
-      user: process.env.GMAIL_USER,
-
-      pass: process.env.GMAIL_PASS,
-
-    },
-
-
-  });
+});
 
 
 
