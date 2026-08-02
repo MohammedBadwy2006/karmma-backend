@@ -32,6 +32,10 @@ async function sendViaGmail({ to, subject, html }) {
 //////////////////////////////////////////////////////
 async function sendViaResend({ to, subject, html }) {
   console.log("=== RESEND START ===");
+
+  console.log("===== SEND MAIL CALLED =====");
+  console.log("EMAIL PROVIDER:", EMAIL_PROVIDER);
+
   console.log("TO:", to);
   console.log(
     "RESEND_API_KEY:",
