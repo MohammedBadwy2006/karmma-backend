@@ -111,6 +111,11 @@ function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function verificationDoc(email) {
+  return db
+    .collection("emailVerifications")
+    .doc(email.trim().toLowerCase());
+}
 //////////////////////////////////////////////////////
 // Middleware
 //////////////////////////////////////////////////////
@@ -275,7 +280,12 @@ app.get("/reviews/:placeId", async (req, res) => {
 //////////////////////////////////////////////////////
 // Send Verification Code
 //////////////////////////////////////////////////////
-
+app.get("/test-otp", (req, res) => {
+  res.json({
+    success: true,
+    message: "OTP API Updated",
+  });
+});
 app.post("/verification/send", requireAuth, async (req, res) => {
   const { uid, email } = req;
 
@@ -431,6 +441,105 @@ app.post("/verification/verify", requireAuth, async (req, res) => {
     console.error(e);
 
     res.status(500).json({
+      error: e.message,
+    });
+  }
+
+});
+
+
+//////////////////////////////////////////////////////
+// Auth - Send OTP Before Register
+//////////////////////////////////////////////////////
+
+app.post("/auth/send-code", async (req, res) => {
+  try {
+    let { email } = req.body || {};
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Email is required",
+      });
+    }
+
+    email = email.trim().toLowerCase();
+
+    // هل الإيميل مستخدم بالفعل؟
+    try {
+      await auth.getUserByEmail(email);
+
+      return res.status(409).json({
+        success: false,
+        error: "Email already registered",
+      });
+    } catch (_) {
+      // المستخدم غير موجود، وده المطلوب
+    }
+
+    const docRef = verificationDoc(email);
+
+    const snap = await docRef.get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      const lastSent =
+        data.lastSentAt?.toMillis?.() ?? 0;
+
+      const seconds =
+        (Date.now() - lastSent) / 1000;
+
+      if (seconds < RESEND_COOLDOWN_SECONDS) {
+        return res.status(429).json({
+          success: false,
+          error: `Please wait ${Math.ceil(
+            RESEND_COOLDOWN_SECONDS - seconds
+          )} seconds`,
+        });
+      }
+    }
+
+    const code = generateCode();
+
+    const expiresAt = new Date(
+      Date.now() + CODE_TTL_MINUTES * 60 * 1000
+    );
+
+    await docRef.set({
+      email,
+      code,
+      verified: false,
+      attempts: 0,
+      expiresAt,
+      lastSentAt: FieldValue.serverTimestamp(),
+    });
+
+    await sendMail({
+      to: email,
+      subject: "Kemara Verification Code",
+      html: `
+      <div style="font-family:sans-serif;text-align:center">
+        <h2>Kemara Verification</h2>
+        <h1 style="letter-spacing:8px">${code}</h1>
+        <p>
+          This code expires in
+          ${CODE_TTL_MINUTES}
+          minutes.
+        </p>
+      </div>
+      `,
+    });
+
+    res.json({
+      success: true,
+      message: "Verification code sent",
+    });
+  } catch (e) {
+    console.error(e);
+
+    res.status(500).json({
+      success: false,
       error: e.message,
     });
   }
