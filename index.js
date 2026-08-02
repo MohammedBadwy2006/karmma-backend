@@ -572,255 +572,100 @@ app.get("/test-otp",(req,res)=>{
 // Send OTP Before Register
 //////////////////////////////////////////////////////
 
-app.post("/auth/send-code",
-async(req,res)=>{
-
-
-console.log("===== SEND CODE =====");
-
-console.log(req.body);
-
-
-
-try{
-console.log("######## NEW BUILD ########");
-console.log("TIME:", new Date().toISOString());
-console.log("REQUEST BODY:", req.body);
-
-
-
-console.log("EMAIL:", email);
-
-let {
-  email
-}=req.body || {};
-
-
-console.log("EMAIL:", email);
-
-
-if(!email){
-
-
-return res.status(400).json({
-
-success:false,
-
-error:"Email is required"
-
-});
-
-
-}
-
-
-
-email =
-email
-.trim()
-.toLowerCase();
-
-
-
-
-//
-// Check Firebase user
-//
-
-try{
-
-
-await auth.getUserByEmail(email);
-
-
-
-return res.status(409).json({
-
-success:false,
-
-error:"Email already registered"
-
-});
-
-
-}catch(error){
-
-// user not found
-
-}
-
-
-
-
-
-
-const docRef =
-verificationDoc(email);
-
-
-
-
-const old =
-await docRef.get();
-
-
-
-if(old.exists){
-
-
-const data =
-old.data();
-
-
-
-const last =
-data.lastSentAt?.toMillis?.() || 0;
-
-
-
-const seconds =
-(Date.now()-last)/1000;
-
-
-
-if(
-seconds <
-RESEND_COOLDOWN_SECONDS
-){
-
-
-return res.status(429).json({
-
-success:false,
-
-error:
-`Please wait ${Math.ceil(
-RESEND_COOLDOWN_SECONDS-seconds
-)} seconds`
-
-});
-
-
-}
-
-
-
-}
-
-
-
-
-
-
-const code =
-generateCode();
-
-
-
-
-await docRef.set({
-
-
-email,
-
-
-code,
-
-
-verified:false,
-
-
-attempts:0,
-
-
-expiresAt:
-new Date(
-Date.now() +
-CODE_TTL_MINUTES*60*1000
-),
-
-
-
-lastSentAt:
-FieldValue.serverTimestamp()
-
-
-});
-
-
-
-
-
-await sendMail({
-
-to:email,
-
-
-subject:
-"Kemara Verification Code",
-
-
-html:`
-
-<div style="font-family:sans-serif;text-align:center">
-
-<h2>Kemara Verification</h2>
-
-<h1 style="letter-spacing:8px">
-${code}
-</h1>
-
-
-<p>
-Code expires in ${CODE_TTL_MINUTES} minutes
-</p>
-
-
-</div>
-
-`
-
-});
-
-
-
-
-
-res.json({
-
-success:true,
-
-message:
-"Verification code sent"
-
-});
-
-
-
-
-
-}catch(error){
-
-
-
-console.error(error);
-
-
-
-res.status(500).json({
-
-success:false,
-
-error:error.message
-
-});
-
-
-
-}
-
-
-
+app.post("/auth/send-code", async (req, res) => {
+  console.log("===== SEND CODE =====");
+  console.log(req.body);
+
+  try {
+    console.log("######## NEW BUILD ########");
+    console.log("TIME:", new Date().toISOString());
+    console.log("REQUEST BODY:", req.body);
+
+    let { email } = req.body || {};
+
+    console.log("EMAIL:", email);
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Email is required",
+      });
+    }
+
+    email = email.trim().toLowerCase();
+
+    //
+    // Check Firebase user
+    //
+    try {
+      await auth.getUserByEmail(email);
+
+      return res.status(409).json({
+        success: false,
+        error: "Email already registered",
+      });
+    } catch (error) {
+      // user not found
+    }
+
+    const docRef = verificationDoc(email);
+
+    const old = await docRef.get();
+
+    if (old.exists) {
+      const data = old.data();
+
+      const last = data.lastSentAt?.toMillis?.() || 0;
+
+      const seconds = (Date.now() - last) / 1000;
+
+      if (seconds < RESEND_COOLDOWN_SECONDS) {
+        return res.status(429).json({
+          success: false,
+          error: `Please wait ${Math.ceil(
+            RESEND_COOLDOWN_SECONDS - seconds
+          )} seconds`,
+        });
+      }
+    }
+
+    const code = generateCode();
+
+    await docRef.set({
+      email,
+      code,
+      verified: false,
+      attempts: 0,
+      expiresAt: new Date(
+        Date.now() + CODE_TTL_MINUTES * 60 * 1000
+      ),
+      lastSentAt: FieldValue.serverTimestamp(),
+    });
+
+    await sendMail({
+      to: email,
+      subject: "Kemara Verification Code",
+      html: `
+      <div style="font-family:sans-serif;text-align:center">
+        <h2>Kemara Verification</h2>
+        <h1 style="letter-spacing:8px">${code}</h1>
+        <p>Code expires in ${CODE_TTL_MINUTES} minutes</p>
+      </div>
+      `,
+    });
+
+    return res.json({
+      success: true,
+      message: "Verification code sent",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
 //////////////////////////////////////////////////////
 // Verify Email Code (Before Register)
