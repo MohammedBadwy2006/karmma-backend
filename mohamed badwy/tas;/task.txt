@@ -1,0 +1,145 @@
+Task Data Structure
+Mohamed ahmed shahat
+Group B — Section 4
+Problem 1 — Infix to Postfix Conversion
+Convert the following infix expression to postfix using the stack
+algorithm. show the full trace — the stack state after every character is
+processed.
+● A * (B + C) ^ D - E
+Solution:-
+Output: A , Stack: [* , (]
+Output: AB, Stack: [* , ( , +]
+We reach ‘)’ , so pop till ‘(‘
+Output: ABC+ , Stack: [*]
+^ is higher precedence than * , Stack: [* , ^]
+Pop all -&gt; Output: ABC+D^*
+Stack: [-]
+Output: ABC+D^*E
+Pop [-]
+Final Output: ABC+D^*E-
+—------------------------------------------------------------------------------------------------------------------------------------
+Problem 2 — Postfix Expression Evaluation
+Evaluate the following postfix expression using a stack. Show the stack
+state after every step.
+● 7 5 3 * 5 1 ^ / + 3 2 - +
+Solution:-
+Push [7, 5, 3] , Stack:[7, 5, 3]
+‘*’ -&gt; Output: 5 * 3 = 15, Stack:[7, 15]
+Push [5, 1] ,Stack:[7, 15, 5, 1]
+‘^’ -&gt; Output: 5 ^ 1 = 5 , Stack:[7, 15, 5]
+‘/’ -&gt; Output: 15 / 5 = 3, Stack:[7, 3]
+‘+’ -&gt; Output: 7 + 3 = 10, Stack:[10]
+Push [3, 2] , Stack [10, 3, 2]
+‘-’ -&gt; Output: 3 - 1 = 1, Stack:[10, 1]
+Output: 10 + 1 = 11
+Final Output: 11
+—------------------------------------------------------------------------------------------------------------------------------------
+Problem 3 — Balanced Parentheses
+Write a program that checks whether a string of parentheses () is
+balanced or not.
+● The program must take a string as input and print &quot;Balanced&quot; or
+&quot;Not Balanced&quot;
+● Ex: (A+(B-C/(A*B)-C/(A^C+(A-B))) Balanced
+● Ex: (A+C-(A/B) Not Balanced
+Solution:-
+#include &lt;bits/stdc++.h&gt;
+using namespace std;
+#define faster ios::sync_with_stdio(false); cin.tie(nullptr)
+int main() {
+faster;
+
+string inp;
+cin &gt;&gt; inp;
+stack &lt;char&gt; st;
+bool ch = 1;
+for (int i = 0 ; i &lt; inp.length() ; i++){
+if (inp[i] == &#39;(&#39;){
+st.push(inp[i]);
+} else if (inp[i] == &#39;)&#39;) {
+if (st.empty()){
+ch = 0;
+break;
+}
+st.pop();
+}
+}
+if (!st.empty()){
+ch = 0;
+}
+if (ch){
+cout &lt;&lt; &quot;Balanced\n&quot;;
+} else {
+cout &lt;&lt; &quot;Not Balanced\n&quot;;
+}
+return 0;
+}
+—------------------------------------------------------------------------------------------------------------------------------------
+Problem 4 — Queue Using Two Stacks
+Write a clear step-by-step algorithm for implementing a Queue using
+two stacks (call them S1 and S2).
+Your algorithm must describe:
+Enqueue(x) / Add and Dequeue() / Delete operations
+● Analyze the time complexity of both operations
+● Trace the following operations and show what do S1 and S2 look
+like at each operation:
+○ Enqueue 10
+○ Enqueue 20
+○ Enqueue 30
+○ Dequeue
+○ Enqueue 40
+○ Dequeue
+○ Dequeue
+
+Solution:-
+
+S1 S2 operation Time
+[10] [] Enqueue 10 O(1)
+[10, 20] [] Enqueue 20 O(1)
+[10, 20, 30] [] Enqueue 30 O(1)
+[] [30, 20] Dequeue 10 O(n)
+*it’s a loop*
+[40] [30, 20] Enqueue 40 O(1)
+[40] [30] Dequeue 20 O(1)
+[40] [] Dequeue 30 O(1)
+
+Problem 5 — Push/Pop Sequencing
+Values 1 through 5 are pushed onto a stack in order (1 first, 5 last), but a
+pop can happen at any time between pushes.
+For each sequence below, either give the full push/pop operations that
+produce it, or prove it is impossible:
+● 2, 4, 5, 3, 1
+● 1, 5, 4, 2, 3
+● 1, 3, 5, 4, 2
+Solution:-
+● 2, 4, 5, 3, 1 :
+Push(1)
+Push(2)
+Pop(2)
+Push(3)
+Push(4)
+Pop(4)
+Push(5)
+Pop(5)
+Pop(3)
+Pop(1)
+● 1, 5, 4, 2, 3:
+Push(1)
+Push (2)
+Push (3)
+Push (4)
+Push (5)
+Pop (5)
+Pop (4)
+Pop (3) -&gt; Impossible
+
+● 1, 3, 5, 4, 2:
+Push (1)
+Pop (1)
+Push (2)
+Push (3)
+Pop (3)
+Push (4)
+Push (5)
+Pop (5)
+Pop (4)
+Pop (2)
