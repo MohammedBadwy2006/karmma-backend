@@ -30,22 +30,37 @@ async function sendViaGmail({ to, subject, html }) {
 //////////////////////////////////////////////////////
 // Resend
 //////////////////////////////////////////////////////
-
 async function sendViaResend({ to, subject, html }) {
+  console.log("=== RESEND START ===");
+  console.log("TO:", to);
+  console.log(
+    "RESEND_API_KEY:",
+    process.env.RESEND_API_KEY ? "FOUND" : "MISSING"
+  );
+  console.log("RESEND_FROM:", process.env.RESEND_FROM);
+
   const { Resend } = require("resend");
 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const { error } = await resend.emails.send({
+  console.log("BEFORE RESEND REQUEST");
+
+  const { error, data } = await resend.emails.send({
     from: process.env.RESEND_FROM,
     to,
     subject,
     html,
   });
 
+  console.log("AFTER RESEND REQUEST");
+  console.log("DATA:", data);
+  console.log("ERROR:", error);
+
   if (error) {
     throw new Error(error.message);
   }
+
+  console.log("=== RESEND SUCCESS ===");
 }
 
 //////////////////////////////////////////////////////
